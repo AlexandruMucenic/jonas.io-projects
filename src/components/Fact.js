@@ -1,26 +1,18 @@
-import { useState } from 'react';
-import { CATEGORIES } from '../constants';
-import supabase from '../supabase';
+import { useState } from "react";
+import { CATEGORIES } from "../constants";
+import { voteFact } from "../factService";
 
 function Fact({ fact, setFacts }) {
   const [isUpdating, setIsUpdating] = useState(false);
+
   const isDisputed =
     fact.votesInteresting + fact.votesMindBlowing < fact.votesFalse;
 
   async function handleVote(columnName) {
     setIsUpdating(true);
-    const { data: updatedFact, error } = await supabase
-      .from('facts')
-      .update({ [columnName]: fact[columnName] + 1 })
-      .eq('id', fact.id)
-      .select();
+    const updated = await voteFact(fact.id, columnName);
+    setFacts([...updated]);
     setIsUpdating(false);
-
-    !error
-      ? setFacts(facts =>
-          facts.map(f => (f.id === fact.id ? updatedFact[0] : f))
-        )
-      : alert(error.message);
   }
 
   return (

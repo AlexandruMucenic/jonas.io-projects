@@ -1,42 +1,32 @@
-import { useState } from 'react';
-import { CATEGORIES, isValidHttpUrl } from '../constants';
-import supabase from '../supabase';
+import { useState } from "react";
+import { CATEGORIES, isValidHttpUrl } from "../constants";
+import { addFact, getFacts } from "../factService";
 
 function NewFactForm({ setFacts, setShowForm }) {
-  const [text, setText] = useState('');
-  const [source, setSource] = useState('');
-  const [category, setCategory] = useState('');
+  const [text, setText] = useState("");
+  const [source, setSource] = useState("");
+  const [category, setCategory] = useState("");
   const [isUploading, setIsUploading] = useState(false);
 
   async function handleSubmit(e) {
-    // 1. prevent browser reload
     e.preventDefault();
-
-    // 2. Check if data is valid. If so, create a new fact
     if (text && isValidHttpUrl(source) && category) {
       setIsUploading(true);
-      // 3. Uploading fact to SupaBase and receive the new fact object
-      const { data: newFact, error } = await supabase
-        .from('facts')
-        .insert([{ text, source, category }])
-        .select();
+
+      await addFact({ text, source, category });
+      const updatedFacts = await getFacts("all");
+      setFacts(updatedFacts);
+
+      setText("");
+      setSource("");
+      setCategory("");
       setIsUploading(false);
-
-      // 4. Add the new fact to the UI
-      !error ? setFacts(facts => [newFact[0], ...facts]) : alert(error.message);
-
-      // 5. Reset input fields
-      setText('');
-      setSource('');
-      setCategory('');
-
-      // 6. Close the form
-      // setShowForm(false);
+      setShowForm(false);
     }
   }
 
   return (
-    <form className='fact-form' onSubmit={handleSubmit}>
+    <form className="fact-form" onSubmit={handleSubmit}>
       <input
         type='text'
         placeholder='Share a fact with the world...'
